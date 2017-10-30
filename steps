@@ -1,0 +1,75 @@
+VagrantfileVagrant.configure(2) do |config|
+config.vm.define "jenkins" do |jenkins|
+jenkins.vm.box = "ubuntu/trusty64"
+jenkins.vm.network "private_network", ip: "192.168.13.252"
+jenkins.vm.hostname = "jenkins"
+jenkins.vm.provider "virtualbox" do |v|
+v.memory = 4096
+v.cpus = 2
+end
+end
+end
+
+Install Tomcat on Ubuntu 14.04sudo apt-get update
+sudo apt-get install tomcat7sudo apt-get install tomcat7-docs tomcat7-admin tomcat7-examplesInstall JAVA and Jenkins
+sudo add-apt-repository ppa:webupd8team/java -y
+sudo apt-get update
+sudo apt-get install oracle-java8-installerwget -q -O - https://jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins-ci.org/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'sudo apt-get update
+sudo apt-get install jenkins -y
+sudo service jenkins restart
+sudo cat /var/lib/jenkins/secrets/initialAdminPassword
+
+Configure TOMCAT
+
+Change the port of tomcat to 8081
+ update its port in /etc/tomcat7/server.xml to 8081http://192.168.13.252:8081
+
+
+update file /etc/default/tomcat7
+
+1. JAVA_OPTS line to 
+JAVA_OPTS="-Djava.security.egd=file:/dev/./urandom -Djava.awt.headless=true -Xmx512m -XX:MaxPermSize=256m -XX:+UseConcMarkSweepGC"
+2. JAVA_HOME
+JAVA_HOME=/usr/lib/jvm/java-8-oracle
+
+3. Add user to tomcat file /etc/tomcat7/tomcat-users.xml
+<role rolename="manager-gui"/>
+<role rolename="manager-script"/>
+<role rolename="manager-jmx"/>
+<role rolename="manager-status"/>
+<user username="tomcat" password="tomcat" roles="manager-gui,manager-script,manager-jmx,manager-status"/>
+
+Restart Service in case of any issues: service tomcat7 start
+
+http://192.168.13.252:8081
+
+
+Install Jenkins
+
+
+Deploy to tomcat, glassfish and JBoss 
+Plugin -> Deploy to container Plugin
+
+Create the AutomatedBuildJob
+Download war file keyword "sample war file download"
+from https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/
+
+Post-build Actions > Deploy war/ear file to a container
+war/ear file > **/*.warContainers, select tomcat7, add credentials tomcat/tomcat and also in scope select Systems(jenkins and nodes only)
+Save
+
+Manage Jenkins > Configure System > Check the workspace directory 
+Copy the sample.war file to above workspace location
+
+
+(Jenkins user)cd /var/lib/jenkins/workspace/AutomatedDeploymentTest
+(Jenkins user) wget https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
+
+context path > "sample.war"
+Container > select Tomcat7 > add username and password
+
+BuildJob
+
+Access the url for sample.war
+http://192.168.13.252:8081/sample.war/
